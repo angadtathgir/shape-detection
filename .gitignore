@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+scratch/
+# challenge inputs (download from the challenge doc and place here; dynamic.mp4 is ~100 MB)
+media/
+.DS_Store

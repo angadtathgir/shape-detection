@@ -1,0 +1,4 @@
+1841 frames from media/dynamic_hard.mp4 -> results/dynamic_hard_3d.mp4 (avc1)
+detection time: mean 20.2 ms, p95 22.9 ms (~50 fps; video is 30 fps)
+shapes found per frame: {2: 20, 3: 112, 4: 437, 5: 1269, 6: 3}
+circle depth Z: median 249.54 in, std 0.62 in, range 246.38-252.12 in

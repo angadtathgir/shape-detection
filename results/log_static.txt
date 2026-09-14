@@ -1,0 +1,6 @@
+rectangle  centre=(  112.5,    76.0) px  area=    3790 px
+circle     centre=(  553.0,   104.4) px  area=    5315 px
+trapezoid  centre=(  839.2,   148.1) px  area=    5855 px
+triangle   centre=(  279.3,   320.5) px  area=    5878 px
+pentagon   centre=(  690.6,   343.8) px  area=    9092 px
+wrote results/static_detected.png

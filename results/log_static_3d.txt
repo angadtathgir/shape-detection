@@ -1,0 +1,6 @@
+rectangle  centre=(  112.5,    76.0) px  area=    3790 px  X=   27.4 Y=   18.5 Z= 312.0 in
+circle     centre=(  553.0,   104.4) px  area=    5315 px  X=  134.6 Y=   25.4 Z= 312.0 in
+trapezoid  centre=(  839.2,   148.1) px  area=    5855 px  X=  204.2 Y=   36.0 Z= 312.0 in
+triangle   centre=(  279.3,   320.5) px  area=    5878 px  X=   68.0 Y=   77.8 Z= 312.0 in
+pentagon   centre=(  690.6,   343.8) px  area=    9092 px  X=  168.1 Y=   83.5 Z= 312.0 in
+wrote results/static_3d.png
