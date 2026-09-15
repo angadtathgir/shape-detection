@@ -6,7 +6,7 @@ mode), the same way the aircraft receives its camera feed.
 Usage:
   python detect_video.py media/dynamic.mp4 -o results/dynamic_detected.mp4
   python detect_video.py media/dynamic_hard.mp4 -o results/dynamic_hard_detected.mp4
-  python detect_video.py media/dynamic_hard.mp4 -o results/dynamic_hard_3d.mp4 --3d --csv results/hard_3d.csv
+  python detect_video.py media/dynamic_hard.mp4 -o results/dynamic_hard_3d.mp4 --3d --csv results/dynamic_hard_3d.csv
 """
 
 import argparse
@@ -53,9 +53,10 @@ def main():
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     writer, fourcc = open_writer(args.output, fps, out_size)
-    log = None
+    csv_file = log = None
     if args.csv:
-        log = csv.writer(open(args.csv, "w", newline=""))
+        csv_file = open(args.csv, "w", newline="")
+        log = csv.writer(csv_file)
         log.writerow(["frame", "label", "u_px", "v_px", "area_px", "X_in", "Y_in", "Z_in"])
 
     detector = ShapeDetector()
@@ -72,7 +73,9 @@ def main():
         positions = localizer.localize(detections, w, h) if localizer else None
         times.append(time.perf_counter() - t0)
         counts[len(detections)] += 1
-        if localizer and localizer.depth is not None:
+        # Depth statistics only count frames where the circle is actually visible
+        # (on other frames the last accepted depth is just carried forward).
+        if localizer and localizer.depth is not None and any(d.label == "circle" for d in detections):
             depths.append(localizer.depth)
 
         if log:
@@ -92,6 +95,8 @@ def main():
 
     cap.release()
     writer.release()
+    if csv_file:
+        csv_file.close()
     cv2.destroyAllWindows()
 
     ms = np.array(times) * 1000
@@ -101,8 +106,8 @@ def main():
     print("shapes found per frame:", dict(sorted(counts.items())))
     if depths:
         d = np.array(depths)
-        print(f"circle depth Z: median {np.median(d):.2f} in, std {d.std():.2f} in, "
-              f"range {d.min():.2f}-{d.max():.2f} in")
+        print(f"circle depth Z over {len(d)} frames with the circle visible: median {np.median(d):.2f} in, "
+              f"std {d.std():.2f} in, range {d.min():.2f}-{d.max():.2f} in")
 
 
 if __name__ == "__main__":

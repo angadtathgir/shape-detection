@@ -1,6 +1,5 @@
 """Part 4: 3D positions of shape centres from a single calibrated camera."""
 
-import cv2
 import numpy as np
 
 
@@ -12,10 +11,12 @@ def circle_radius_px(circle, cut=2.0):
       1. Three refits dropping points more than `cut` px *inside* the rim: the
          straight cut where another shape covers part of the circle.
       2. Two refits dropping points more than `cut` px off the rim either way,
-         which also removes an outward bulge where the outline leaked into a
-         touching shape (one frame read 233 in without this stage).
+         which also removes a small outward bulge where the outline leaks into
+         a touching shape.
     Trimming both sides from the start fails: the first fit, pulled off-centre
-    by the straight cut, would also discard genuine rim points.
+    by the straight cut, also discarded genuine rim points (depth read up to
+    263 in on partly hidden circles). A large bulge can still fool the fit;
+    that case is caught by the consistency gate in PlanarLocalizer.
 
     Two simpler estimates were tried first:
       - r = sqrt(area / pi): shrinks when part of the circle is hidden, which
@@ -37,6 +38,7 @@ def circle_radius_px(circle, cut=2.0):
         keep = off_rim > -cut if stage == "inside" else np.abs(off_rim) < cut
     return r
 
+
 # Intrinsic matrix given in the challenge (focal lengths in pixels).
 K_CHALLENGE = np.array([[2564.3186869, 0.0, 0.0],
                         [0.0, 2569.70273111, 0.0],
@@ -54,8 +56,8 @@ class PlanarLocalizer:
 
     1. Depth from the circle. A circle of radius R at depth Z appears with a
        pixel radius r = f * R / Z, so Z = f * R / r. The pixel radius comes from
-       the circle's area, r = sqrt(A / pi), which averages over every boundary
-       pixel instead of trusting a few extreme ones.
+       a robust fit to the circle's rim (circle_radius_px), and a consistency
+       gate rejects implausible single-frame jumps (see __init__).
     2. Flat surface. All shapes lie on one plane facing the camera, so every
        centre shares the circle's depth.
     3. Invert the projection: X = (u - cx) * Z / fx,  Y = (v - cy) * Z / fy.

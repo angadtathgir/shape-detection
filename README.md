@@ -21,7 +21,9 @@ centre's 3D position from the camera intrinsics (Parts 1–4).
 
 ![3D preview](results/preview_dynamic_hard_3d.gif)
 
-*Previews are short, downsampled GIF clips; the full-length, full-quality recordings are the `.mp4` files linked above.*
+*Previews are short, downsampled GIF clips. The full-length recordings are the `.mp4` files linked
+above. They are written directly by `detect_video.py` from every processed frame rather than
+screen-captured, so they show exactly what the algorithm output, at the source frame rate.*
 
 ## Running it
 
@@ -83,8 +85,21 @@ colour at the very end, to place edges precisely. Nothing in it is tuned to gras
 
 `detect_video.py` reads one frame at a time with `cv2.VideoCapture.read()` and processes it before
 reading the next, so the algorithm never sees future frames, the same way an aircraft receives its
-camera feed. The only state carried between frames is the last known depth in 3D mode (used while
-the circle is hidden).
+camera feed. Detection itself is stateless. The only state carried between frames is in 3D mode: the
+last accepted depth (reused while the circle is hidden) and the last 15 depths for the consistency
+gate described in Part 4.
+
+### Background agnosticism (Part 3): what changed
+
+The first version already avoided colour thresholds, but it needed four changes before the gravel
+video with gradient-filled shapes worked. No parameter differs between the grass and gravel runs.
+
+| Change | Why it was needed |
+|---|---|
+| Texture measured as blur residual instead of local standard deviation | A smooth brightness ramp (the white trapezoid) scored as rough as gravel, and the shape lost half its area |
+| Thresholds as ratios of the frame's median texture | Grass and gravel have very different absolute texture, but shapes sit far below the median in both |
+| Hysteresis growth from strict seeds into "fairly smooth" pixels | Parts of gradient fills where the colour turns sharply are slightly rough and fell just above the seed threshold |
+| 8-px refinement band, with a median filter before the watershed | A 5-px band cut off the rectangle's magenta edge strip; widening it alone let outlines leak on weak edges (green on grass), which the median filter stopped |
 
 ### 3D positions (Part 4, `pennair/camera.py`)
 
@@ -139,11 +154,12 @@ Assumptions worth flagging:
 an Apple M5 laptop CPU (clean benchmark of 120 frames), comfortably faster than the videos' 30 fps.
 While also drawing and encoding output video, the full runs averaged 19.6–21.4 ms per frame.
 
-**Depth (Part 4).** The camera doesn't move relative to the ground plane, so the circle's depth should
-be constant, which makes a good self-check. Over the 1167 gravel-video frames where the circle is
-visible: **median Z = 249.5 in, standard deviation 0.62 in, every frame within 246.4–252.1 in** (about
-±1%), including frames where another shape covers part of the circle. In the other 674 frames the
-circle is cut off by the frame edge or hidden, and the last accepted depth is reused.
+**Depth (Part 4).** In both videos the camera stays at a fixed height above the plane, so the circle's
+depth should be constant, which makes a good self-check. Over the 1167 gravel-video frames where the
+circle is visible: **median Z = 249.5 in, standard deviation 0.48 in, range 246.4–252.1 in, 99.6% of
+frames within ±1% of the median**, including frames where another shape covers part of the circle.
+In the other 674 frames the circle is cut off by the frame edge or hidden, and the last accepted depth
+is reused.
 
 ### Measured accuracy (`tools/evaluate.py`)
 
@@ -193,10 +209,17 @@ Labels, on sampled frames where all five shapes are whole (not overlapping or cu
 
 ## Efficiency
 
-- Texture uses box filters, so cost is O(1) per pixel whatever the window size.
-- Processing at 960×540 is 4× fewer pixels; outlines are then re-traced at full resolution only inside
-  each shape's bounding box.
-- No per-pixel Python loops; per-frame work is a handful of OpenCV calls plus one loop over ~5 regions.
+Measured on 1920×1080 frames of the gravel video (Apple M5 laptop CPU, averaged over 60 frames):
+
+| Choice | Measured effect |
+|---|---|
+| Process at 960×540 instead of 1920×1080 | **≈19 ms vs 74 ms per frame** (≈54 fps vs 14 fps, and 14 fps would fall behind the video's 30 fps). The downscale itself costs 0.1 ms. Outlines are re-traced at full resolution only inside each shape's bounding box, so accuracy is still measured at 1080p. |
+| Box filter for the texture window | 0.82 ms at 7×7 and 0.85 ms at 31×31: the cost doesn't grow with window size. A general 7×7 convolution takes 2.95 ms. |
+| Median filter before the watershed | 0.6 ms, the cost of stopping outlines leaking on weak edges |
+| No per-pixel Python loops | Each frame is a handful of OpenCV calls plus one Python loop over ~5 regions |
+
+The texture map is the largest single cost (8.2 ms, about 44% of the frame), so it would be the first
+thing to move to a GPU or a smaller processing width if the aircraft's computer needed more headroom.
 
 ## Limitations
 
