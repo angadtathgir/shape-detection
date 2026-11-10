@@ -20,7 +20,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from pennair.detector import ShapeDetector  # noqa: E402
+from shapes.detector import ShapeDetector  # noqa: E402
 
 
 def read_frames(path, indices):

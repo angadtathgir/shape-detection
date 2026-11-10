@@ -10,9 +10,9 @@ from pathlib import Path
 
 import cv2
 
-from pennair.camera import PlanarLocalizer
-from pennair.detector import ShapeDetector
-from pennair.draw import draw_detections
+from shapes.camera import PlanarLocalizer
+from shapes.detector import ShapeDetector
+from shapes.draw import draw_detections
 
 
 def main():

@@ -55,7 +55,7 @@ What every frame does have in common is that **backgrounds are rough at small sc
 smooth**, even the gradient-filled ones. So the detector segments by local texture and only uses
 colour at the very end, to place edges precisely. Nothing in it is tuned to grass or gravel.
 
-### Pipeline (`pennair/detector.py`)
+### Pipeline (`shapes/detector.py`)
 
 1. **Downscale** 1920×1080 frames to 960×540 for speed.
 2. **Texture map.** Subtract a Gaussian-blurred copy of the frame (σ = 1.5 px) and average the
@@ -101,7 +101,7 @@ video with gradient-filled shapes worked. No parameter differs between the grass
 | Hysteresis growth from strict seeds into "fairly smooth" pixels | Parts of gradient fills where the colour turns sharply are slightly rough and fell just above the seed threshold |
 | 8-px refinement band, with a median filter before the watershed | A 5-px band cut off the rectangle's magenta edge strip; widening it alone let outlines leak on weak edges (green on grass), which the median filter stopped |
 
-### 3D positions (Part 4, `pennair/camera.py`)
+### 3D positions (Part 4, `shapes/camera.py`)
 
 Pinhole model in the OpenCV camera frame (X right, Y down, Z out of the lens):
 u = fx·X/Z + cx, v = fy·Y/Z + cy.
@@ -235,9 +235,9 @@ thing to move to a GPU or a smaller processing width if the aircraft's computer 
 ## Layout
 
 ```
-pennair/detector.py    Parts 1-3: texture map, seeds, watershed, outlines, labels
-pennair/camera.py      Part 4: depth from the circle, back-projection with K
-pennair/draw.py        overlay drawing
+shapes/detector.py    Parts 1-3: texture map, seeds, watershed, outlines, labels
+shapes/camera.py      Part 4: depth from the circle, back-projection with K
+shapes/draw.py        overlay drawing
 detect_image.py        run on one image
 detect_video.py        run on a video as a stream; timing, per-frame CSV
 tools/evaluate.py      IoU / centre error against colour-matched ground truth

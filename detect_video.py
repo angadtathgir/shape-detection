@@ -18,9 +18,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from pennair.camera import PlanarLocalizer
-from pennair.detector import ShapeDetector
-from pennair.draw import draw_detections
+from shapes.camera import PlanarLocalizer
+from shapes.detector import ShapeDetector
+from shapes.draw import draw_detections
 
 
 def open_writer(path, fps, size):
@@ -88,7 +88,7 @@ def main():
                          interpolation=cv2.INTER_AREA)
         writer.write(vis)
         if args.show:
-            cv2.imshow("PennAiR shapes", vis)
+            cv2.imshow("Shape detection", vis)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         index += 1
