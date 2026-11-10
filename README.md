@@ -1,4 +1,4 @@
-# PennAiR Software Challenge (Fall 2026): Shape Detection
+# Background-Agnostic Shape Detection
 
 Detects solid shapes on a textured background, traces their outlines, marks their centres,
 works on streamed video, is agnostic to background and fill gradients, and estimates each
